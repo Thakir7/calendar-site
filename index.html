@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تقويم من يناير إلى يونيو - ميلادي وهجري</title>
+    <style>
+        body {
+            font-family: Tahoma, Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn-admin {
+            padding: 5px 12px;
+            font-size: 13px;
+            border-radius: 6px;
+            border: 1px solid #1976d2;
+            background: #2196f3;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .btn-admin:hover {
+            background: #1976d2;
+        }
+
+        .admin-status {
+            font-size: 12px;
+            color: #555;
+        }
+
+        .filter-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+            font-size: 12px;
+        }
+
+        #filterInput {
+            padding: 3px 6px;
+            font-size: 12px;
+            min-width: 180px;
+        }
+
+        .btn-filter,
+        .btn-filter-secondary {
+            padding: 3px 8px;
+            font-size: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 1px solid #888;
+        }
+
+        .btn-filter {
+            background: #ffffff;
+        }
+
+        .btn-filter-secondary {
+            background: #f5f5f5;
+        }
+
+        .calendar-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .month-card {
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .month-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .month-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .month-year {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .add-event-hint {
+            font-size: 11px;
+            color: #888;
+            text-align: left;
+            margin-bottom: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th {
+            font-size: 12px;
+            padding: 4px 0;
+            background: #e8e8e8;
+        }
+
+        td {
+            border: 1px solid #eee;
+            height: 70px;
+            vertical-align: top;
+            padding: 3px;
+            font-size: 12px;
+        }
+
+        td.empty {
+            background: #fafafa;
+        }
+
+        .day-cell {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        .day-cell:hover {
+            background: #f0f8ff;
+        }
+
+        .greg-day {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .hijri-day {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .events {
+            margin-top: 4px;
+            font-size: 11px;
+            color: #004d40;
+        }
+
+        .event-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 2px;
+        }
+
+        .event-badge {
+            background: #e0f2f1;
+            border-radius: 4px;
+            padding: 1px 3px;
+            display: inline-block;
+        }
+
+        .event-delete-btn {
+            border: none;
+            background: #ffebee;
+            color: #c62828;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 12px;
+            line-height: 18px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .event-delete-btn:hover {
+            background: #ffcdd2;
+        }
+
+        @media (max-width: 900px) {
+            .calendar-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .calendar-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<h1>تقويم الأشهر من يناير إلى يونيو (ميلادي / هجري)</h1>
+
+<div class="controls">
+    <button id="adminLoginBtn" class="btn-admin">دخول المدير</button>
+    <span id="adminStatus" class="admin-status">وضع الزائر - عرض فقط (الأحداث محفوظة على هذا الجهاز فقط)</span>
+
+    <div class="filter-wrapper">
+        <label for="filterInput">فلترة الأحداث:</label>
+        <input id="filterInput" type="text" placeholder="اكتب نصًا للبحث في الأحداث">
+        <button id="applyFilterBtn" class="btn-filter">تطبيق</button>
+        <button id="clearFilterBtn" class="btn-filter-secondary">مسح</button>
+    </div>
+</div>
+
+<div class="calendar-container" id="calendarContainer">
+    <!-- التقويم يولَّد هنا -->
+</div>
+
+<script>
+    // ========= الإعدادات العامة =========
+    const monthNames = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو"];
+    const weekdayNames = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+
+    // تخزين الأحداث في الذاكرة
+    const events = {};  // { "YYYY-MM-DD": [ {text, color}, ... ] }
+    const STORAGE_KEY = "CAL_EVENTS_V1";
+    const ADMIN_PASSWORD = "1234"; // غيّر كلمة المرور كما تريد
+
+    let isAdmin = false;
+    let filterText = "";
+
+    const hijriFormatter = new Intl.DateTimeFormat("ar-SA-u-ca-islamic", {
+        day: "numeric"
+    });
+
+    // ========= تحميل/حفظ من localStorage =========
+    function loadEventsFromStorage() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+            const obj = JSON.parse(raw);
+            if (obj && typeof obj === "object") {
+                for (const key in obj) {
+                    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                        events[key] = obj[key];
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("خطأ عند قراءة التخزين:", e);
+        }
+    }
+
+    function saveEventsToStorage() {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+        } catch (e) {
+            console.error("خطأ عند حفظ التخزين:", e);
+        }
+    }
+
+    // ========= واجهة المدير =========
+    function setupAdminControls() {
+        const btn = document.getElementById("adminLoginBtn");
+        const status = document.getElementById("adminStatus");
+
+        btn.addEventListener("click", () => {
+            if (isAdmin) {
+                // تسجيل خروج
+                isAdmin = false;
+                status.textContent = "وضع الزائر - عرض فقط (الأحداث محفوظة على هذا الجهاز فقط)";
+                rerenderAllEvents();
+                return;
+            }
+
+            const pw = prompt("أدخل كلمة مرور المدير:");
+            if (!pw) return;
+
+            if (pw === ADMIN_PASSWORD) {
+                isAdmin = true;
+                status.textContent = "وضع المدير - يمكنك إضافة وحذف الأحداث (محفوظة على هذا الجهاز)";
+                alert("تم تسجيل دخول المدير بنجاح.");
+                rerenderAllEvents();
+            } else {
+                alert("كلمة المرور غير صحيحة.");
+            }
+        });
+    }
+
+    // ========= الفلتر =========
+    function setupFilterControls() {
+        const input = document.getElementById("filterInput");
+        const applyBtn = document.getElementById("applyFilterBtn");
+        const clearBtn = document.getElementById("clearFilterBtn");
+
+        applyBtn.addEventListener("click", () => {
+            filterText = input.value.trim();
+            rerenderAllEvents();
+        });
+
+        clearBtn.addEventListener("click", () => {
+            filterText = "";
+            input.value = "";
+            rerenderAllEvents();
+        });
+    }
+
+    function rerenderAllEvents() {
+        const containers = document.querySelectorAll("[data-events]");
+        containers.forEach(container => {
+            const dateKey = container.getAttribute("data-events");
+            renderEventsInContainer(dateKey, container);
+        });
+    }
+
+    // ========= توليد التقويم =========
+    function renderCalendar(year) {
+        const container = document.getElementById("calendarContainer");
+        container.innerHTML = "";
+
+        for (let month = 0; month < 6; month++) {
+            const monthCard = document.createElement("div");
+            monthCard.className = "month-card";
+
+            const header = document.createElement("div");
+            header.className = "month-header";
+
+            const title = document.createElement("div");
+            title.className = "month-title";
+            title.textContent = monthNames[month];
+
+            const yearLabel = document.createElement("div");
+            yearLabel.className = "month-year";
+            yearLabel.textContent = year;
+
+            header.appendChild(title);
+            header.appendChild(yearLabel);
+
+            const hint = document.createElement("div");
+            hint.className = "add-event-hint";
+            hint.textContent = "الضغط على اليوم لإضافة حدث (متاح للمدير فقط - محفوظ محليًا)";
+
+            const table = document.createElement("table");
+            const thead = document.createElement("thead");
+            const headRow = document.createElement("tr");
+
+            for (let d = 0; d < 7; d++) {
+                const th = document.createElement("th");
+                th.textContent = weekdayNames[d];
+                headRow.appendChild(th);
+            }
+            thead.appendChild(headRow);
+            table.appendChild(thead);
+
+            const tbody = document.createElement("tbody");
+
+            const firstDay = new Date(year, month, 1);
+            const startingWeekday = firstDay.getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            let currentDay = 1;
+
+            for (let week = 0; week < 6 && currentDay <= daysInMonth; week++) {
+                const row = document.createElement("tr");
+
+                for (let weekday = 0; weekday < 7; weekday++) {
+                    const cell = document.createElement("td");
+
+                    if (week === 0 && weekday < startingWeekday) {
+                        cell.className = "empty";
+                    } else if (currentDay > daysInMonth) {
+                        cell.className = "empty";
+                    } else {
+                        const dateObj = new Date(year, month, currentDay);
+                        const dateKey = formatDateKey(dateObj);
+                        const hijriDay = hijriFormatter.format(dateObj);
+
+                        const dayCell = document.createElement("div");
+                        dayCell.className = "day-cell";
+                        dayCell.setAttribute("data-date", dateKey);
+
+                        const gregDiv = document.createElement("div");
+                        gregDiv.className = "greg-day";
+                        gregDiv.textContent = currentDay;
+
+                        const hijriDiv = document.createElement("div");
+                        hijriDiv.className = "hijri-day";
+                        hijriDiv.textContent = "هـ " + hijriDay;
+
+                        const eventsDiv = document.createElement("div");
+                        eventsDiv.className = "events";
+                        eventsDiv.setAttribute("data-events", dateKey);
+
+                        if (events[dateKey]) {
+                            renderEventsInContainer(dateKey, eventsDiv);
+                        }
+
+                        dayCell.appendChild(gregDiv);
+                        dayCell.appendChild(hijriDiv);
+                        dayCell.appendChild(eventsDiv);
+
+                        dayCell.addEventListener("click", () => {
+                            if (!isAdmin) {
+                                alert("إضافة الأحداث مخصصة لمدير الموقع فقط على هذا الجهاز.");
+                                return;
+                            }
+                            addEventForDate(dateKey);
+                        });
+
+                        cell.appendChild(dayCell);
+                        currentDay++;
+                    }
+
+                    row.appendChild(cell);
+                }
+
+                tbody.appendChild(row);
+            }
+
+            table.appendChild(tbody);
+
+            monthCard.appendChild(header);
+            monthCard.appendChild(hint);
+            monthCard.appendChild(table);
+            container.appendChild(monthCard);
+        }
+    }
+
+    // ========= عرض الأحداث في خلية معينة =========
+    function renderEventsInContainer(dateKey, container) {
+        container.innerHTML = "";
+        const list = events[dateKey] || [];
+
+        list.forEach((ev, index) => {
+            const text = (ev && typeof ev === "object") ? (ev.text || "") : String(ev || "");
+
+            if (filterText && !text.toLowerCase().includes(filterText.toLowerCase())) {
+                return;
+            }
+
+            const span = document.createElement("span");
+            span.className = "event-item";
+
+            const badge = document.createElement("span");
+            badge.className = "event-badge";
+
+            if (ev && typeof ev === "object") {
+                badge.textContent = ev.text || "";
+                if (ev.color) {
+                    badge.style.backgroundColor = ev.color;
+                    badge.style.color = "#000";
+                }
+            } else {
+                badge.textContent = text;
+            }
+
+            span.appendChild(badge);
+
+            if (isAdmin) {
+                const delBtn = document.createElement("button");
+                delBtn.type = "button";
+                delBtn.className = "event-delete-btn";
+                delBtn.textContent = "×";
+                delBtn.title = "حذف الحدث";
+                delBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    deleteEvent(dateKey, index);
+                });
+                span.appendChild(delBtn);
+            }
+
+            container.appendChild(span);
+        });
+    }
+
+    // ========= توابع مساعدة =========
+    function formatDateKey(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const d = String(date.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+    }
+
+    function addEventForDate(dateKey) {
+        const text = prompt("اكتب نص الحدث لليوم " + dateKey + " :");
+        if (!text || text.trim() === "") return;
+
+        const color = prompt(
+            "اختر لون للحدث (مثال: red أو blue أو #ff0000)\n" +
+            "اتركه فارغاً لو أردت اللون الافتراضي."
+        );
+
+        if (!events[dateKey]) {
+            events[dateKey] = [];
+        }
+
+        events[dateKey].push({
+            text: text.trim(),
+            color: color && color.trim() !== "" ? color.trim() : ""
+        });
+
+        saveEventsToStorage();
+
+        const eventsContainers = document.querySelectorAll(`[data-events='${dateKey}']`);
+        eventsContainers.forEach(container => {
+            renderEventsInContainer(dateKey, container);
+        });
+    }
+
+    function deleteEvent(dateKey, index) {
+        if (!events[dateKey] || !events[dateKey][index]) return;
+
+        if (!confirm("هل أنت متأكد من حذف هذا الحدث؟")) return;
+
+        events[dateKey].splice(index, 1);
+        if (events[dateKey].length === 0) {
+            delete events[dateKey];
+        }
+
+        saveEventsToStorage();
+
+        const eventsContainers = document.querySelectorAll(`[data-events='${dateKey}']`);
+        eventsContainers.forEach(container => {
+            renderEventsInContainer(dateKey, container);
+        });
+    }
+
+    // ========= بداية التشغيل =========
+    window.addEventListener("DOMContentLoaded", () => {
+        loadEventsFromStorage();
+        setupAdminControls();
+        setupFilterControls();
+        const currentYear = new Date().getFullYear();
+        renderCalendar(currentYear);
+    });
+</script>
+
+</body>
+</html>
