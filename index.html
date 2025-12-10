@@ -232,7 +232,7 @@
       overflow: hidden auto;
     }
 
-    /* الحدث الآن يلتف نصه (multi-line) */
+    /* الحدث مع التفاف نص */
     .event-pill {
       display: flex;
       align-items: flex-start;
@@ -249,9 +249,9 @@
 
     .event-text {
       flex: 1;
-      white-space: normal;      /* التفاف النص */
+      white-space: normal;
       overflow: hidden;
-      text-overflow: clip;      /* بدون ... */
+      text-overflow: clip;
       line-height: 1.2;
     }
 
@@ -268,7 +268,7 @@
       opacity: 0.5;
     }
 
-    /* أشكال خاصة لربط لون الحدث بين الأيام المتتالية */
+    /* أشكال الشريط للأحداث الممتدة */
     .event-pill.range-single {
       border-radius: 999px;
     }
@@ -297,7 +297,7 @@
       margin-top: 6px;
     }
 
-    /* حوار إضافة حدث */
+    /* حوارات */
     .dialog-backdrop {
       position: fixed;
       inset: 0;
@@ -353,7 +353,6 @@
       margin-top: 10px;
     }
 
-    /* حوار عرض تفاصيل الحدث */
     .event-view-text {
       padding: 8px;
       border-radius: 6px;
@@ -371,7 +370,6 @@
       margin-bottom: 6px;
     }
 
-    /* استجابة للشاشات الصغيرة */
     @media (max-width: 900px) {
       #calendarContainer {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -389,7 +387,6 @@
       }
     }
 
-    /* وضع الطباعة */
     @media print {
       body {
         background: #ffffff;
@@ -426,7 +423,6 @@
       الفترة من <strong>29 رجب 1447</strong> حتى <strong>نهاية ربيع الأول 1448</strong>
     </div>
 
-    <!-- شريط الحالة وأزرار التحكم -->
     <div class="status-bar">
       <div id="adminStatus" class="status-badge status-visitor">
         وضع الزائر – عرض الأحداث فقط
@@ -441,7 +437,6 @@
       </div>
     </div>
 
-    <!-- شريط الفلتر -->
     <div class="filter-row">
       <span>🔍 فلترة الأحداث حسب النص:</span>
       <input type="text" id="filterInput" placeholder="مثال: اختبار، إجازة، نشاط..." />
@@ -449,7 +444,6 @@
       <button class="secondary" onclick="clearFilter()">مسح الفلتر</button>
     </div>
 
-    <!-- أسطورة الألوان -->
     <div class="legend">
       <span><span class="legend-color" style="background:#e53935;"></span> أحمر = اختبار / تحذير</span>
       <span><span class="legend-color" style="background:#43a047;"></span> أخضر = إجازة / مناسبة سعيدة</span>
@@ -458,7 +452,6 @@
       <span><span class="legend-color" style="background:#8e24aa;"></span> بنفسجي = تنبيه عام</span>
     </div>
 
-    <!-- شبكة الأشهر -->
     <div id="calendarContainer"></div>
 
     <div class="hint">
@@ -479,7 +472,7 @@
       </div>
       <div class="dialog-row">
         <label for="eventTitleInput">عنوان الحدث</label>
-        <input type="text" id="eventTitleInput" placeholder="مثال: اختبار عملي، دورة تدريبية..." />
+        <input type="text" id="eventTitleInput" placeholder="مثال: الأسبوع الثاني عشر، موعد اختبار ..." />
       </div>
       <div class="dialog-row">
         <label for="eventColorSelect">لون الحدث</label>
@@ -514,25 +507,22 @@
     </div>
   </div>
 
-  <!-- مدخل ملف النسخة الاحتياطية -->
   <input type="file" id="backupFileInput" accept="application/json" style="display:none" />
 
   <script>
-    /**********************
-     * بيانات التقويم الهجري (أم القرى)
-     **********************/
+    /* بيانات التقويم (أم القرى) */
     const WEEKDAYS = ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
 
     const HIJRI_MONTHS = [
-      { year: 1447, month: 7,  name: "رجب",        days: 30, startWeekday: 0 }, // 1 رجب = الأحد
-      { year: 1447, month: 8,  name: "شعبان",      days: 30, startWeekday: 2 }, // الثلاثاء
-      { year: 1447, month: 9,  name: "رمضان",      days: 29, startWeekday: 4 }, // الخميس
-      { year: 1447, month: 10, name: "شوال",       days: 30, startWeekday: 5 }, // الجمعة
-      { year: 1447, month: 11, name: "ذو القعدة",  days: 29, startWeekday: 0 }, // الأحد
-      { year: 1447, month: 12, name: "ذو الحجة",   days: 29, startWeekday: 1 }, // الإثنين
-      { year: 1448, month: 1,  name: "محرم",       days: 30, startWeekday: 2 }, // الثلاثاء
-      { year: 1448, month: 2,  name: "صفر",        days: 29, startWeekday: 4 }, // الخميس
-      { year: 1448, month: 3,  name: "ربيع الأول", days: 29, startWeekday: 5 }  // الجمعة
+      { year: 1447, month: 7,  name: "رجب",        days: 30, startWeekday: 0 },
+      { year: 1447, month: 8,  name: "شعبان",      days: 30, startWeekday: 2 },
+      { year: 1447, month: 9,  name: "رمضان",      days: 29, startWeekday: 4 },
+      { year: 1447, month: 10, name: "شوال",       days: 30, startWeekday: 5 },
+      { year: 1447, month: 11, name: "ذو القعدة",  days: 29, startWeekday: 0 },
+      { year: 1447, month: 12, name: "ذو الحجة",   days: 29, startWeekday: 1 },
+      { year: 1448, month: 1,  name: "محرم",       days: 30, startWeekday: 2 },
+      { year: 1448, month: 2,  name: "صفر",        days: 29, startWeekday: 4 },
+      { year: 1448, month: 3,  name: "ربيع الأول", days: 29, startWeekday: 5 }
     ];
 
     const RANGE_START = { year: 1447, month: 7, day: 29 };
@@ -546,15 +536,15 @@
     let events = {};
     let currentFilter = "";
 
-    /********* توابع مساعدة للوقت الهجري *********/
+    /* توابع مساعدة */
     function compareHijri(a, b) {
       if (a.year !== b.year) return a.year - b.year;
       if (a.month !== b.month) return a.month - b.month;
       return a.day - b.day;
     }
 
-    function inRange(dayObj) {
-      return compareHijri(dayObj, RANGE_START) >= 0 && compareHijri(dayObj, RANGE_END) <= 0;
+    function inRange(d) {
+      return compareHijri(d, RANGE_START) >= 0 && compareHijri(d, RANGE_END) <= 0;
     }
 
     function findMonthIndex(year, month) {
@@ -575,7 +565,6 @@
       return { year: next.year, month: next.month, days: next.days };
     }
 
-    // إضافة عدد من الأيام (للأمام فقط) ضمن مصفوفة الأشهر المحددة
     function addHijriDays(start, offset) {
       let y = start.year;
       let m = start.month;
@@ -600,7 +589,7 @@
       return `${year}-${month}-${day}`;
     }
 
-    /********* إدارة المدير *********/
+    /* إدارة المدير */
     function getAdminPassword() {
       return localStorage.getItem(ADMIN_PASSWORD_KEY) || ADMIN_DEFAULT_PASSWORD;
     }
@@ -664,7 +653,7 @@
       }
     }
 
-    /********* تحميل/حفظ الأحداث *********/
+    /* تحميل/حفظ الأحداث */
     function loadEvents() {
       try {
         const raw = localStorage.getItem(EVENTS_STORAGE_KEY);
@@ -678,7 +667,7 @@
       localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
     }
 
-    /********* إنشاء التقويم *********/
+    /* إنشاء التقويم */
     function renderCalendar() {
       const container = document.getElementById("calendarContainer");
       container.innerHTML = "";
@@ -805,7 +794,6 @@
               pill.className = "event-pill";
               pill.style.background = ev.color || "#2563eb";
 
-              // شكل الشريط حسب موضعه في المدى
               if (ev.pos) {
                 pill.classList.add("range-" + ev.pos);
               } else {
@@ -814,14 +802,8 @@
 
               const txt = document.createElement("span");
               txt.className = "event-text";
-              // عرض النص فقط في اليوم الأول أو إذا الحدث مفرد
-              if (!ev.pos || ev.pos === "single" || ev.pos === "start") {
-                txt.textContent = ev.text || "";
-              } else {
-                txt.textContent = ""; // الأيام المتوسطة/النهائية بدون نص لتوضيح الاتصال اللوني
-              }
+              txt.textContent = ev.text || "";
 
-              // عرض التفاصيل عند الضغط على النص (للجميع)
               txt.onclick = (e) => {
                 e.stopPropagation();
                 const [yy,mm,dd] = key.split("-").map(Number);
@@ -865,7 +847,7 @@
       });
     }
 
-    /********* التعامل مع الأيام والأحداث *********/
+    /* إضافة/حذف وعرض الأحداث */
     let dialogDate = null;
 
     function handleDayClick(dayObj) {
@@ -942,22 +924,35 @@
       closeEventDialog();
     }
 
-    /********* حذف حدث *********/
     function deleteEvent(key, id) {
       if (!isAdmin) {
         alert("حذف الأحداث متاح للمدير فقط.");
         return;
       }
       if (!events[key]) return;
-      events[key] = events[key].filter(ev => ev.id !== id);
-      if (events[key].length === 0) {
-        delete events[key];
+
+      const target = events[key].find(ev => ev.id === id);
+      const groupId = target && target.groupId;
+
+      if (groupId) {
+        for (const k in events) {
+          if (!Object.prototype.hasOwnProperty.call(events, k)) continue;
+          events[k] = events[k].filter(ev => ev.groupId !== groupId);
+          if (events[k].length === 0) {
+            delete events[k];
+          }
+        }
+      } else {
+        events[key] = events[key].filter(ev => ev.id !== id);
+        if (events[key].length === 0) {
+          delete events[key];
+        }
       }
+
       saveEvents();
       renderCalendar();
     }
 
-    /********* عرض تفاصيل الحدث (للجميع) *********/
     function viewEvent(dayObj, ev) {
       const dateLabel = document.getElementById("viewDateLabel");
       const textBox = document.getElementById("viewText");
@@ -970,7 +965,7 @@
       document.getElementById("eventViewDialog").classList.add("dialog-hidden");
     }
 
-    /********* الفلتر *********/
+    /* الفلتر */
     function applyFilter() {
       const inp = document.getElementById("filterInput");
       currentFilter = inp.value.trim();
@@ -983,7 +978,7 @@
       renderCalendar();
     }
 
-    /********* الطباعة و PDF *********/
+    /* طباعة و PDF */
     function printCalendar() {
       window.print();
     }
@@ -1000,7 +995,7 @@
       html2pdf().from(element).set(opt).save();
     }
 
-    /********* النسخة الاحتياطية *********/
+    /* نسخ احتياطي */
     function downloadBackup() {
       const dataStr = JSON.stringify(events, null, 2);
       const blob = new Blob([dataStr], { type: "application/json" });
@@ -1041,7 +1036,7 @@
       reader.readAsText(file, "utf-8");
     });
 
-    /********* تشغيل أولي *********/
+    /* تشغيل أولي */
     loadEvents();
     updateAdminStatus();
     renderCalendar();
