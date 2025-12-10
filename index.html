@@ -188,6 +188,7 @@
     table.month-table {
       width: 100%;
       border-collapse: collapse;
+      border-spacing: 0;
       table-layout: fixed;
       font-size: 11px;
     }
@@ -268,27 +269,30 @@
       opacity: 0.5;
     }
 
-    /* أشكال الشريط للأحداث الممتدة */
+    /* أشكال الشريط للأحداث الممتدة – متصلة بين الأيام */
     .event-pill.range-single {
       border-radius: 999px;
     }
 
+    /* بداية الشريط (أول يوم في المدى) – تقوّس من الجهة اليمنى فقط في RTL */
     .event-pill.range-start {
       border-top-right-radius: 999px;
       border-bottom-right-radius: 999px;
-      border-top-left-radius: 4px;
-      border-bottom-left-radius: 4px;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
     }
 
+    /* منتصف الشريط – بدون أي تقوّس حتى تلتصق visually مع الجيران */
     .event-pill.range-mid {
-      border-radius: 4px;
+      border-radius: 0;
     }
 
+    /* نهاية الشريط (آخر يوم في المدى) – تقوّس من الجهة اليسرى فقط */
     .event-pill.range-end {
       border-top-left-radius: 999px;
       border-bottom-left-radius: 999px;
-      border-top-right-radius: 4px;
-      border-bottom-right-radius: 4px;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
     }
 
     .hint {
@@ -935,6 +939,7 @@
       const groupId = target && target.groupId;
 
       if (groupId) {
+        // حذف كل أجزاء الحدث من جميع الأيام
         for (const k in events) {
           if (!Object.prototype.hasOwnProperty.call(events, k)) continue;
           events[k] = events[k].filter(ev => ev.groupId !== groupId);
