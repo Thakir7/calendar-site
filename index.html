@@ -149,10 +149,10 @@
       border: 1px solid #9ca3af;
     }
 
-    /* شبكة الأشهر */
+    /* شبكة الأشهر: شهرين في الصف */
     #calendarContainer {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
     }
 
@@ -207,7 +207,7 @@
     .month-table td {
       border: 1px solid #f3f4f6;
       vertical-align: top;
-      height: 52px;
+      height: 60px;
       padding: 2px;
       position: relative;
       cursor: pointer;
@@ -232,7 +232,7 @@
     }
 
     .event-list {
-      max-height: 40px;
+      max-height: 44px;
       overflow: hidden auto;
     }
 
@@ -241,13 +241,14 @@
       align-items: center;
       justify-content: space-between;
       border-radius: 999px;
-      padding: 1px 4px;
+      padding: 1px 6px;
       margin-bottom: 2px;
-      font-size: 10px;
+      font-size: 11px;
       color: #ffffff;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      cursor: pointer;
     }
 
     .event-text {
@@ -330,6 +331,24 @@
       margin-top: 10px;
     }
 
+    /* حوار عرض تفاصيل الحدث */
+    .event-view-text {
+      padding: 8px;
+      border-radius: 6px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      font-size: 13px;
+      white-space: pre-wrap;
+      max-height: 200px;
+      overflow: auto;
+    }
+
+    .event-view-date {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 6px;
+    }
+
     /* استجابة للشاشات الصغيرة */
     @media (max-width: 900px) {
       #calendarContainer {
@@ -369,7 +388,7 @@
         display: none !important;
       }
       #calendarContainer {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
       }
       .month-card {
@@ -382,7 +401,7 @@
   <div class="page">
     <h1>تقويم أم القرى (هجري) مع الأحداث</h1>
     <div class="subtitle">
-      الفترة من <strong>27 رجب 1447</strong> حتى <strong>نهاية ربيع الأول 1448</strong>
+      الفترة من <strong>29 رجب 1447</strong> حتى <strong>نهاية ربيع الأول 1448</strong>
     </div>
 
     <!-- شريط الحالة وأزرار التحكم -->
@@ -423,11 +442,12 @@
     <div class="hint">
       📌 ملاحظات:
       <br />– إضافة وحذف الأحداث متاحة للمدير فقط (كلمة المرور الافتراضية: <strong>1234</strong>).
+      <br />– يمكنك تحديد مدة الحدث (عدد أيام متتالية) عند الإضافة، وسيتم تكراره على تلك الأيام.
       <br />– يتم حفظ جميع الأحداث وكلمة المرور في متصفحك (localStorage)، ويمكنك أخذ نسخة احتياطية في أي وقت.
     </div>
   </div>
 
-  <!-- حوار إضافة/تعديل حدث -->
+  <!-- حوار إضافة حدث -->
   <div id="eventDialog" class="dialog-backdrop dialog-hidden">
     <div class="dialog-box">
       <h3>إضافة حدث لليوم</h3>
@@ -448,9 +468,25 @@
           <option value="#8e24aa">بنفسجي – تنبيه عام</option>
         </select>
       </div>
+      <div class="dialog-row">
+        <label for="eventRepeatDays">مدة الحدث (عدد الأيام المتتالية، 0 = يوم واحد)</label>
+        <input type="number" id="eventRepeatDays" min="0" max="100" value="0" />
+      </div>
       <div class="dialog-actions">
         <button onclick="saveEventFromDialog()">💾 حفظ</button>
         <button class="secondary" onclick="closeEventDialog()">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- حوار عرض تفاصيل الحدث -->
+  <div id="eventViewDialog" class="dialog-backdrop dialog-hidden">
+    <div class="dialog-box">
+      <h3>تفاصيل الحدث</h3>
+      <div id="viewDateLabel" class="event-view-date"></div>
+      <div id="viewText" class="event-view-text"></div>
+      <div class="dialog-actions">
+        <button class="secondary" onclick="closeEventViewDialog()">إغلاق</button>
       </div>
     </div>
   </div>
@@ -460,43 +496,34 @@
 
   <script>
     /**********************
-     * بيانات التقويم الهجري
-     * (حسب تقويم أم القرى للفترة المطلوبة)
-     * المصدر: جداول 1447 و1448 (Habibur Hijri Calendar باستخدام Umm al-Qura) :contentReference[oaicite:1]{index=1}
+     * بيانات التقويم الهجري (أم القرى)
      **********************/
-
-    // ترتيب الأيام: 0=الأحد ... 6=السبت
     const WEEKDAYS = ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
 
-    // الأشهر الهجرية المطلوبة فقط (من 7/1447 إلى 3/1448)
     const HIJRI_MONTHS = [
-      { year: 1447, month: 7,  name: "رجب",        days: 30, startWeekday: 0 }, // يبدأ الأحد
-      { year: 1447, month: 8,  name: "شعبان",     days: 30, startWeekday: 2 }, // الثلاثاء
-      { year: 1447, month: 9,  name: "رمضان",     days: 29, startWeekday: 4 }, // الخميس
-      { year: 1447, month: 10, name: "شوال",      days: 30, startWeekday: 5 }, // الجمعة
-      { year: 1447, month: 11, name: "ذو القعدة", days: 29, startWeekday: 0 }, // الأحد
-      { year: 1447, month: 12, name: "ذو الحجة",  days: 29, startWeekday: 1 }, // الإثنين
-      { year: 1448, month: 1,  name: "محرم",      days: 30, startWeekday: 2 }, // الثلاثاء
-      { year: 1448, month: 2,  name: "صفر",       days: 29, startWeekday: 4 }, // الخميس
-      { year: 1448, month: 3,  name: "ربيع الأول",days: 29, startWeekday: 5 }  // الجمعة
+      { year: 1447, month: 7,  name: "رجب",        days: 30, startWeekday: 0 }, // 1 رجب = الأحد
+      { year: 1447, month: 8,  name: "شعبان",      days: 30, startWeekday: 2 }, // الثلاثاء
+      { year: 1447, month: 9,  name: "رمضان",      days: 29, startWeekday: 4 }, // الخميس
+      { year: 1447, month: 10, name: "شوال",       days: 30, startWeekday: 5 }, // الجمعة
+      { year: 1447, month: 11, name: "ذو القعدة",  days: 29, startWeekday: 0 }, // الأحد
+      { year: 1447, month: 12, name: "ذو الحجة",   days: 29, startWeekday: 1 }, // الإثنين
+      { year: 1448, month: 1,  name: "محرم",       days: 30, startWeekday: 2 }, // الثلاثاء
+      { year: 1448, month: 2,  name: "صفر",        days: 29, startWeekday: 4 }, // الخميس
+      { year: 1448, month: 3,  name: "ربيع الأول", days: 29, startWeekday: 5 }  // الجمعة
     ];
 
-    // حدود الفترة المطلوبة
     const RANGE_START = { year: 1447, month: 7, day: 29 };
-    const RANGE_END   = { year: 1448, month: 3, day: 29 }; // آخر يوم في ربيع الأول 1448
+    const RANGE_END   = { year: 1448, month: 3, day: 29 };
 
-    /**********************
-     * إدارة حالة المدير
-     **********************/
     const ADMIN_DEFAULT_PASSWORD = "1234";
     const ADMIN_PASSWORD_KEY = "CAL_ADMIN_PWD_V1";
     const EVENTS_STORAGE_KEY = "CAL_EVENTS_V3";
 
     let isAdmin = false;
-    let events = {}; // { "1447-7-27": [ {id,text,color}, ... ] }
+    let events = {};
     let currentFilter = "";
 
-    // دوال مساعدة للمقارنة بين تواريخ هجرية (سنة/شهر/يوم)
+    /********* توابع مساعدة للوقت الهجري *********/
     function compareHijri(a, b) {
       if (a.year !== b.year) return a.year - b.year;
       if (a.month !== b.month) return a.month - b.month;
@@ -507,6 +534,50 @@
       return compareHijri(dayObj, RANGE_START) >= 0 && compareHijri(dayObj, RANGE_END) <= 0;
     }
 
+    function findMonthIndex(year, month) {
+      return HIJRI_MONTHS.findIndex(m => m.year === year && m.month === month);
+    }
+
+    function getPrevMonthByYM(year, month) {
+      const idx = findMonthIndex(year, month);
+      if (idx <= 0) return null;
+      const prev = HIJRI_MONTHS[idx - 1];
+      return { year: prev.year, month: prev.month, days: prev.days };
+    }
+
+    function getNextMonthByYM(year, month) {
+      const idx = findMonthIndex(year, month);
+      if (idx === -1 || idx >= HIJRI_MONTHS.length - 1) return null;
+      const next = HIJRI_MONTHS[idx + 1];
+      return { year: next.year, month: next.month, days: next.days };
+    }
+
+    // إضافة عدد من الأيام (للأمام فقط) ضمن مصفوفة الأشهر المحددة
+    function addHijriDays(start, offset) {
+      let y = start.year;
+      let m = start.month;
+      let d = start.day + offset;
+
+      while (true) {
+        const idx = findMonthIndex(y, m);
+        if (idx === -1) return null;
+        const monthInfo = HIJRI_MONTHS[idx];
+        if (d <= monthInfo.days) break;
+        d -= monthInfo.days;
+        const next = getNextMonthByYM(y, m);
+        if (!next) return null;
+        y = next.year;
+        m = next.month;
+      }
+
+      return { year: y, month: m, day: d };
+    }
+
+    function makeKey(year, month, day) {
+      return `${year}-${month}-${day}`;
+    }
+
+    /********* إدارة المدير *********/
     function getAdminPassword() {
       return localStorage.getItem(ADMIN_PASSWORD_KEY) || ADMIN_DEFAULT_PASSWORD;
     }
@@ -570,9 +641,7 @@
       }
     }
 
-    /**********************
-     * تحميل/حفظ الأحداث
-     **********************/
+    /********* تحميل/حفظ الأحداث *********/
     function loadEvents() {
       try {
         const raw = localStorage.getItem(EVENTS_STORAGE_KEY);
@@ -586,13 +655,7 @@
       localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
     }
 
-    function makeKey(year, month, day) {
-      return `${year}-${month}-${day}`;
-    }
-
-    /**********************
-     * إنشاء التقويم
-     **********************/
+    /********* إنشاء التقويم *********/
     function renderCalendar() {
       const container = document.getElementById("calendarContainer");
       container.innerHTML = "";
@@ -601,7 +664,6 @@
         const monthCard = document.createElement("div");
         monthCard.className = "month-card";
 
-        // عنوان الشهر
         const header = document.createElement("div");
         header.className = "month-header";
 
@@ -612,7 +674,6 @@
         const rangeSpan = document.createElement("div");
         rangeSpan.className = "month-range";
 
-        // وصف بسيط للفترة داخل هذا الشهر بما يوافق النطاق العام
         let firstVisibleDay = 1;
         if (compareHijri({year:m.year,month:m.month,day:1}, RANGE_START) < 0) {
           firstVisibleDay = RANGE_START.day;
@@ -633,7 +694,6 @@
         const table = document.createElement("table");
         table.className = "month-table";
 
-        // عناوين الأيام
         const thead = document.createElement("thead");
         const headRow = document.createElement("tr");
         WEEKDAYS.forEach(d => {
@@ -646,24 +706,23 @@
 
         const tbody = document.createElement("tbody");
 
-        // حساب الأيام السابقة واللاحقة (مثل شكل التقويم العادي)
-        const prevMonth = getPreviousMonth(index);
-        const nextMonth = getNextMonth(index);
+        const prevMonth = getPrevMonthByYM(m.year, m.month);
+        const nextMonth = getNextMonthByYM(m.year, m.month);
 
-        const totalCells = 6 * 7; // 6 أسابيع كحد أقصى
         let dayNum = 1;
         let nextMonthDay = 1;
 
         for (let week = 0; week < 6; week++) {
           const row = document.createElement("tr");
+          let rowHasContent = false;
+
           for (let wd = 0; wd < 7; wd++) {
             const cell = document.createElement("td");
-            let cellDay, cellMonth, cellYear, isCurrent = false, isPrevNext = false;
+            let cellDay, cellMonth, cellYear, isPrevNext = false;
 
             const cellIndex = week * 7 + wd;
 
             if (cellIndex < m.startWeekday) {
-              // من الشهر السابق
               if (prevMonth) {
                 const prevDays = prevMonth.days;
                 const offset = m.startWeekday - cellIndex;
@@ -677,13 +736,10 @@
                 continue;
               }
             } else if (dayNum <= m.days) {
-              // من الشهر الحالي
               cellDay = dayNum++;
               cellMonth = m.month;
               cellYear = m.year;
-              isCurrent = true;
             } else {
-              // من الشهر التالي
               if (nextMonth) {
                 cellDay = nextMonthDay++;
                 cellMonth = nextMonth.month;
@@ -697,31 +753,25 @@
             }
 
             const dayObj = { year: cellYear, month: cellMonth, day: cellDay };
-
-            // تحديد إذا كان داخل الفترة المطلوبة
             const insideRange = inRange(dayObj);
 
             if (!insideRange) {
               cell.classList.add("out-of-range");
             } else if (isPrevNext) {
-              // أيام من شهر آخر لكن داخل النطاق (مثل 27–30 رجب داخل مربع شعبان)
               cell.classList.add("prev-next");
             }
 
-            // رقم اليوم
             const dn = document.createElement("div");
             dn.className = "day-number";
             dn.textContent = cellDay;
             cell.appendChild(dn);
 
-            // قائمة الأحداث
             const evList = document.createElement("div");
             evList.className = "event-list";
 
             const key = makeKey(cellYear, cellMonth, cellDay);
             let dayEvents = events[key] || [];
 
-            // تطبيق الفلتر
             if (currentFilter) {
               dayEvents = dayEvents.filter(ev =>
                 (ev.text || "").toLowerCase().includes(currentFilter.toLowerCase())
@@ -736,6 +786,14 @@
               const txt = document.createElement("span");
               txt.className = "event-text";
               txt.textContent = ev.text || "";
+
+              // عرض تفاصيل الحدث للزائر والمدير
+              txt.onclick = (e) => {
+                e.stopPropagation();
+                const [yy,mm,dd] = key.split("-").map(Number);
+                viewEvent({year:yy,month:mm,day:dd}, ev);
+              };
+
               pill.appendChild(txt);
 
               const del = document.createElement("span");
@@ -754,15 +812,18 @@
               evList.appendChild(pill);
             });
 
+            if (dayEvents.length > 0) rowHasContent = true;
+
             cell.appendChild(evList);
 
-            // النقر لإضافة حدث (للأيام داخل الفترة فقط)
             if (insideRange) {
               cell.onclick = () => handleDayClick(dayObj);
             }
 
             row.appendChild(cell);
           }
+
+          // نضيف الصف دائماً للحفاظ على شكل الجدول
           tbody.appendChild(row);
         }
 
@@ -773,20 +834,8 @@
       });
     }
 
-    function getPreviousMonth(index) {
-      if (index <= 0) return null;
-      return HIJRI_MONTHS[index - 1];
-    }
-
-    function getNextMonth(index) {
-      if (index >= HIJRI_MONTHS.length - 1) return null;
-      return HIJRI_MONTHS[index + 1];
-    }
-
-    /**********************
-     * التعامل مع الأيام والأحداث
-     **********************/
-    let dialogDate = null; // {year,month,day}
+    /********* التعامل مع الأيام والأحداث *********/
+    let dialogDate = null;
 
     function handleDayClick(dayObj) {
       if (!isAdmin) {
@@ -803,6 +852,7 @@
 
       document.getElementById("eventTitleInput").value = "";
       document.getElementById("eventColorSelect").value = "#e53935";
+      document.getElementById("eventRepeatDays").value = "0";
 
       document.getElementById("eventDialog").classList.remove("dialog-hidden");
     }
@@ -819,17 +869,26 @@
       }
       const title = document.getElementById("eventTitleInput").value.trim();
       const color = document.getElementById("eventColorSelect").value;
+      let repeatDays = parseInt(document.getElementById("eventRepeatDays").value || "0", 10);
+      if (isNaN(repeatDays) || repeatDays < 0) repeatDays = 0;
+
       if (!title) {
         alert("رجاءً أدخل عنوان الحدث.");
         return;
       }
-      const key = makeKey(dialogDate.year, dialogDate.month, dialogDate.day);
-      if (!events[key]) events[key] = [];
-      events[key].push({
-        id: Date.now().toString() + Math.random().toString(16).slice(2),
-        text: title,
-        color: color
-      });
+
+      for (let i = 0; i <= repeatDays; i++) {
+        const d = addHijriDays(dialogDate, i);
+        if (!d || !inRange(d)) continue;
+        const key = makeKey(d.year, d.month, d.day);
+        if (!events[key]) events[key] = [];
+        events[key].push({
+          id: Date.now().toString() + Math.random().toString(16).slice(2),
+          text: title,
+          color: color
+        });
+      }
+
       saveEvents();
       renderCalendar();
       closeEventDialog();
@@ -849,9 +908,20 @@
       renderCalendar();
     }
 
-    /**********************
-     * الفلتر
-     **********************/
+    /********* عرض تفاصيل الحدث (للجميع) *********/
+    function viewEvent(dayObj, ev) {
+      const dateLabel = document.getElementById("viewDateLabel");
+      const textBox = document.getElementById("viewText");
+      dateLabel.textContent = `التاريخ: ${dayObj.day} / ${dayObj.month} / ${dayObj.year} هـ`;
+      textBox.textContent = ev.text || "";
+      document.getElementById("eventViewDialog").classList.remove("dialog-hidden");
+    }
+
+    function closeEventViewDialog() {
+      document.getElementById("eventViewDialog").classList.add("dialog-hidden");
+    }
+
+    /********* الفلتر *********/
     function applyFilter() {
       const inp = document.getElementById("filterInput");
       currentFilter = inp.value.trim();
@@ -864,9 +934,7 @@
       renderCalendar();
     }
 
-    /**********************
-     * الطباعة و PDF
-     **********************/
+    /********* الطباعة و PDF *********/
     function printCalendar() {
       window.print();
     }
@@ -883,9 +951,7 @@
       html2pdf().from(element).set(opt).save();
     }
 
-    /**********************
-     * النسخة الاحتياطية
-     **********************/
+    /********* النسخة الاحتياطية *********/
     function downloadBackup() {
       const dataStr = JSON.stringify(events, null, 2);
       const blob = new Blob([dataStr], { type: "application/json" });
@@ -926,9 +992,7 @@
       reader.readAsText(file, "utf-8");
     });
 
-    /**********************
-     * تشغيل أولي
-     **********************/
+    /********* تشغيل أولي *********/
     loadEvents();
     updateAdminStatus();
     renderCalendar();
