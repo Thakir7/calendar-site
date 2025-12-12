@@ -60,10 +60,9 @@
       align-items:start;
     }
 
-    /* شهر واحد في صف */
     #calendarContainer{
       display:grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr; /* شهر واحد في صف */
       gap:12px;
     }
 
@@ -309,6 +308,7 @@
   <script>
     const WEEKDAYS = ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
 
+    // ⚠️ هذه القيم (عدد أيام الشهر + بداية الأسبوع) يجب أن تكون من جدول أم القرى الرسمي
     const HIJRI_MONTHS = [
       { year: 1447, month: 7,  name: "رجب",        days: 30, startWeekday: 0 },
       { year: 1447, month: 8,  name: "شعبان",      days: 30, startWeekday: 2 },
@@ -337,18 +337,9 @@
 
     function compareHijri(a, b) {
       if (a.year !== b.year) return a.year - b.year;
-      if (a.month !== b.month) return a.month - b.year;
-      return a.day - b.day;
-    }
-    // ✅ تصحيح خطأ بسيط في المقارنة (السطر أعلاه كان خطأ في الشهر)
-    function compareHijriFixed(a,b){
-      if (a.year !== b.year) return a.year - b.year;
       if (a.month !== b.month) return a.month - b.month;
       return a.day - b.day;
     }
-    // نستخدم الثابت الصحيح
-    compareHijri = compareHijriFixed;
-
     function inRange(d) {
       return compareHijri(d, RANGE_START) >= 0 && compareHijri(d, RANGE_END) <= 0;
     }
@@ -400,28 +391,61 @@
       };
     }
 
-    function buildHijriToGregorianMap(){
+    // ✅ بناء تحويل هجري→ميلادي: محاولة Intl ثم Fallback مرساة ثابتة
+    function buildHijriToGregorianMap() {
       hijriToGregMap = new Map();
-      const start = new Date(); start.setDate(start.getDate() - 500); start.setHours(12,0,0,0);
-      const end = new Date(); end.setDate(end.getDate() + 900); end.setHours(12,0,0,0);
 
-      const fmt = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {
-        day:"numeric", month:"numeric", year:"numeric"
-      });
+      // 1) محاولة بالطريقة القياسية (Intl umm al-qura)
+      try {
+        const start = new Date(); start.setDate(start.getDate() - 500); start.setHours(12,0,0,0);
+        const end   = new Date(); end.setDate(end.getDate() + 900);  end.setHours(12,0,0,0);
 
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)){
-        const parts = fmt.formatToParts(d);
-        const day = Number(parts.find(p=>p.type==="day")?.value);
-        const month = Number(parts.find(p=>p.type==="month")?.value);
-        const year = Number(parts.find(p=>p.type==="year")?.value);
-        if (!day || !month || !year) continue;
+        const fmt = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {
+          day:"numeric", month:"numeric", year:"numeric"
+        });
 
-        const key = makeKey(year, month, day);
-        if (!hijriToGregMap.has(key)){
-          hijriToGregMap.set(key, new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)){
+          const parts = fmt.formatToParts(d);
+          const day = Number(parts.find(p=>p.type==="day")?.value);
+          const month = Number(parts.find(p=>p.type==="month")?.value);
+          const year = Number(parts.find(p=>p.type==="year")?.value);
+          if (!day || !month || !year) continue;
+
+          const key = makeKey(year, month, day);
+          if (!hijriToGregMap.has(key)){
+            hijriToGregMap.set(key, new Date(d.getFullYear(), d.getMonth(), d.getDate()));
+          }
         }
+      } catch (_) {
+        // تجاهل - سنستخدم fallback
+      }
+
+      // هل تغطي خريطة Intl نطاقنا؟
+      const needStart = makeKey(RANGE_START.year, RANGE_START.month, RANGE_START.day);
+      const needEnd   = makeKey(RANGE_END.year, RANGE_END.month, RANGE_END.day);
+      if (hijriToGregMap.has(needStart) && hijriToGregMap.has(needEnd)) return;
+
+      // 2) Fallback من مرساة ثابتة (ضمن نطاقك)
+      // 29/7/1447 هـ = 18/01/2026 م
+      const anchorHijri = { year: 1447, month: 7, day: 29 };
+      const anchorGreg  = new Date(2026, 0, 18); // يناير=0
+
+      let h = { ...anchorHijri };
+      let g = new Date(anchorGreg.getFullYear(), anchorGreg.getMonth(), anchorGreg.getDate());
+
+      while (compareHijri(h, RANGE_END) <= 0) {
+        if (inRange(h)) {
+          const key = makeKey(h.year, h.month, h.day);
+          hijriToGregMap.set(key, new Date(g.getFullYear(), g.getMonth(), g.getDate()));
+        }
+        const nextH = addHijriDays(h, 1);
+        if (!nextH) break;
+        h = nextH;
+        g.setDate(g.getDate() + 1);
       }
     }
+
+    function hijriKeyToGregDate(key){ return hijriToGregMap.get(key) || null; }
 
     function getAdminPassword() {
       return localStorage.getItem(ADMIN_PASSWORD_KEY) || ADMIN_DEFAULT_PASSWORD;
@@ -588,7 +612,7 @@
                 dayObj.month === todayHijri.month &&
                 dayObj.day === todayHijri.day) {
               cell.classList.add("today");
-              cell.id = "todayCell"; // ⭐ للزر
+              cell.id = "todayCell";
             }
 
             const dn = document.createElement("div");
@@ -645,7 +669,7 @@
       });
     }
 
-    // ✅ زر الانتقال لليوم
+    // زر الانتقال لليوم
     function scrollToToday(){
       const el = document.getElementById("todayCell");
       if (!el) {
@@ -720,7 +744,7 @@
         }
       } else {
         events[key] = events[key].filter(ev => ev.id !== id);
-        if (events[key].length === 0) delete events[k];
+        if (events[key].length === 0) delete events[key];
       }
 
       saveEvents();
@@ -841,7 +865,6 @@
       return arr;
     }
 
-    function hijriKeyToGregDate(key){ return hijriToGregMap.get(key) || null; }
     function startOfDay(date){ return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0,0,0,0); }
     function endOfDay(date){ return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23,59,59,999); }
 
@@ -980,6 +1003,7 @@
 
       function tick(){
         const now = new Date();
+
         for (const ev of eventList){
           const timerEl = document.getElementById(`timer_${ev.id}`);
           if (!timerEl) continue;
@@ -989,7 +1013,7 @@
 
           if (!gStart || !gEnd){
             timerEl.className = "event-item-timer timer-ended";
-            timerEl.textContent = "⛔ لا يمكن حساب الوقت (تقويم أم القرى غير مدعوم في هذا المتصفح)";
+            timerEl.textContent = "⛔ تعذر حساب الوقت لهذا الحدث (تحقق من إعدادات التاريخ/الوقت في جهازك)";
             continue;
           }
 
