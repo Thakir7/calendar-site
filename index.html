@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <title>تقويم أم القرى 1447–1448 | أحداث + عدّاد</title>
 
-  <!-- PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
@@ -18,32 +17,6 @@
 
     h1{margin:0 0 8px;text-align:center;font-size:24px}
     .subtitle{margin:0 0 12px;text-align:center;color:#6b7280;font-size:14px}
-
-    /* ✅ شريط دعم أم القرى */
-    .support-bar{
-      margin: 0 auto 12px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #e5e7eb;
-      background: #f9fafb;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      font-size:13px;
-    }
-    .support-ok{
-      background:#ecfdf5;
-      border-color:#bbf7d0;
-      color:#166534;
-    }
-    .support-bad{
-      background:#fef2f2;
-      border-color:#fecaca;
-      color:#b91c1c;
-    }
-    .support-title{font-weight:bold}
-    .support-note{color:#6b7280;font-size:12px}
 
     .status-bar{
       display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
@@ -60,6 +33,8 @@
       background:#2563eb;color:#fff
     }
     button.secondary{background:#6b7280}
+    button.danger{background:#dc2626}
+    button.small{padding:4px 8px;font-size:12px;border-radius:10px}
     button:disabled{opacity:.6;cursor:default}
 
     .filter-row{
@@ -69,20 +44,23 @@
     .filter-row input[type="text"]{
       flex:1;min-width:180px;padding:6px 8px;border-radius:6px;border:1px solid #d1d5db;font-size:13px
     }
+    .filter-row select{
+      padding:6px 8px;border-radius:6px;border:1px solid #d1d5db;font-size:13px;
+      background:#fff;
+    }
 
     .legend{font-size:12px;color:#4b5563;margin-bottom:10px}
     .legend span{display:inline-flex;align-items:center;gap:4px;margin-inline-start:8px;margin-bottom:4px}
     .legend-color{width:14px;height:14px;border-radius:3px;border:1px solid #9ca3af}
 
-    /* ✅ تخطيط الصفحة: تقويم (يسار) + قائمة أحداث (يمين) */
     .layout{
       display:grid;
-      grid-template-columns: 1fr 340px; /* calendar | sidebar */
+      grid-template-columns: 1fr 360px;
       gap:12px;
       align-items:start;
     }
 
-    /* ✅ شهر واحد في كل صف */
+    /* شهر واحد في صف */
     #calendarContainer{
       display:grid;
       grid-template-columns: 1fr;
@@ -122,7 +100,7 @@
     .event-delete{font-weight:bold;cursor:pointer;flex-shrink:0}
     .event-delete.disabled{cursor:default;opacity:.5}
 
-    /* ✅ شريط متصل للأحداث الممتدة */
+    /* شريط متصل للأحداث الممتدة */
     .event-pill.range-single{border-radius:999px}
     .event-pill.range-start{
       border-top-right-radius:999px;border-bottom-right-radius:999px;
@@ -134,21 +112,16 @@
       border-top-right-radius:0;border-bottom-right-radius:0;
     }
 
-    /* ✅ تمييز اليوم الحالي */
+    /* تمييز اليوم الحالي */
     .today{
       outline:2px solid #16a34a;
       outline-offset:-2px;
       background:#ecfdf5 !important;
     }
     .today .day-number{
-      background:#16a34a;
-      color:#fff;
-      border-radius:999px;
-      padding:2px 6px;
-      display:inline-block;
+      background:#16a34a;color:#fff;border-radius:999px;padding:2px 6px;display:inline-block;
     }
 
-    /* ✅ الشريط الجانبي */
     .sidebar{
       border:1px solid #e5e7eb;border-radius:10px;background:#fff;
       position:sticky; top:12px;
@@ -156,7 +129,7 @@
     }
     .sidebar-header{
       padding:10px 12px;background:#f9fafb;border-bottom:1px solid #e5e7eb;
-      display:flex;justify-content:space-between;align-items:center;
+      display:flex;justify-content:space-between;align-items:center;gap:10px;
     }
     .sidebar-title{font-weight:bold;font-size:13px}
     .sidebar-count{font-size:12px;color:#6b7280}
@@ -168,17 +141,24 @@
       cursor:pointer;
     }
     .event-item-top{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+    .event-left{display:flex;gap:8px;flex:1}
     .event-dot{width:10px;height:10px;border-radius:999px;margin-top:4px;flex-shrink:0}
     .event-item-title{font-weight:bold;font-size:13px;line-height:1.3}
     .event-item-dates{font-size:12px;color:#6b7280;margin-top:2px}
     .event-item-timer{
       margin-top:6px;padding:6px 8px;border-radius:8px;background:#f9fafb;border:1px solid #e5e7eb;font-size:12px;
     }
+    .event-actions{
+      margin-top:8px;
+      display:flex;
+      gap:8px;
+      justify-content:flex-end;
+    }
+
     .timer-upcoming{color:#1d4ed8}
     .timer-ongoing{color:#166534}
     .timer-ended{color:#6b7280}
 
-    /* dialogs */
     .dialog-backdrop{
       position:fixed;inset:0;background:rgba(0,0,0,.35);
       display:flex;align-items:center;justify-content:center;z-index:1000;
@@ -195,7 +175,6 @@
       width:100%;padding:6px 8px;border-radius:6px;border:1px solid #d1d5db;font-size:13px
     }
     .dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
-
     .event-view-text{
       padding:8px;border-radius:6px;background:#f9fafb;border:1px solid #e5e7eb;font-size:13px;
       white-space:pre-wrap;max-height:240px;overflow:auto
@@ -204,7 +183,6 @@
 
     .hint{font-size:11px;color:#6b7280;margin-top:10px}
 
-    /* responsive */
     @media (max-width: 1100px){
       .layout{grid-template-columns:1fr}
       .sidebar{position:static}
@@ -213,7 +191,7 @@
     @media print{
       body{background:#fff}
       .page{box-shadow:none;margin:0;border-radius:0}
-      .support-bar,.status-bar,.filter-row,.legend,.hint,.dialog-backdrop,.sidebar{display:none!important}
+      .status-bar,.filter-row,.legend,.hint,.dialog-backdrop,.sidebar{display:none!important}
       button{display:none!important}
       #calendarContainer{grid-template-columns:1fr;gap:8px}
       .month-card{border:1px solid #d1d5db}
@@ -228,20 +206,12 @@
       الفترة من <strong>29 رجب 1447</strong> حتى <strong>نهاية ربيع الأول 1448</strong>
     </div>
 
-    <!-- ✅ شريط دعم أم القرى -->
-    <div id="supportBar" class="support-bar">
-      <div>
-        <div id="supportTitle" class="support-title">جاري التحقق من دعم تقويم أم القرى...</div>
-        <div id="supportDetails" class="support-note"></div>
-      </div>
-      <div id="supportBadge" style="font-weight:bold;"></div>
-    </div>
-
     <div class="status-bar">
       <div id="adminStatus" class="status-badge status-visitor">وضع الزائر – عرض الأحداث فقط</div>
       <div class="controls">
         <button id="adminToggleBtn" onclick="toggleAdmin()">🔐 دخول المدير</button>
         <button class="secondary" onclick="changeAdminPassword()">🔑 تغيير كلمة المرور</button>
+        <button class="secondary" onclick="scrollToToday()">📍 الانتقال إلى اليوم</button>
         <button class="secondary" onclick="printCalendar()">🖨️ طباعة</button>
         <button class="secondary" onclick="exportPDF()">📄 PDF</button>
         <button class="secondary" onclick="downloadBackup()">🔄 نسخ احتياطي</button>
@@ -250,8 +220,15 @@
     </div>
 
     <div class="filter-row">
-      <span>🔍 فلترة الأحداث:</span>
+      <span>🔍 فلترة:</span>
       <input type="text" id="filterInput" placeholder="مثال: اختبار، إجازة، نشاط..." />
+      <span>↕️ فرز:</span>
+      <select id="sortSelect" onchange="renderAll()">
+        <option value="date">حسب تاريخ البداية</option>
+        <option value="upcoming">القادمة أولاً</option>
+        <option value="ongoing">الجارية أولاً</option>
+        <option value="ended">المنتهية أولاً</option>
+      </select>
       <button onclick="applyFilter()">تطبيق</button>
       <button class="secondary" onclick="clearFilter()">مسح</button>
     </div>
@@ -265,16 +242,14 @@
     </div>
 
     <div class="layout">
-      <!-- التقويم -->
       <div>
         <div id="calendarContainer"></div>
         <div class="hint">
           – إضافة/حذف الأحداث للمدير فقط (الافتراضي: <b>1234</b>)<br/>
-          – تمييز اليوم الحالي يتم تحديثه تلقائيًا كل يوم عند منتصف الليل.
+          – اليوم الحالي يتم تمييزه تلقائيًا ويتحدث عند منتصف الليل.
         </div>
       </div>
 
-      <!-- الشريط الجانبي للأحداث -->
       <aside class="sidebar">
         <div class="sidebar-header">
           <div class="sidebar-title">قائمة الأحداث</div>
@@ -307,7 +282,7 @@
         </select>
       </div>
       <div class="dialog-row">
-        <label for="eventRepeatDays">مدة الحدث (عدد الأيام المتتالية، 0 = يوم واحد)</label>
+        <label for="eventRepeatDays">مدة الحدث (أيام متتالية، 0 = يوم واحد)</label>
         <input type="number" id="eventRepeatDays" min="0" max="120" value="0" />
       </div>
       <div class="dialog-actions">
@@ -332,9 +307,6 @@
   <input type="file" id="backupFileInput" accept="application/json" style="display:none" />
 
   <script>
-    /**********************
-     * 1) بيانات التقويم الهجري (أم القرى)
-     **********************/
     const WEEKDAYS = ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
 
     const HIJRI_MONTHS = [
@@ -360,57 +332,23 @@
     let events = {};
     let currentFilter = "";
 
-    // خريطة تحويل (HijriKey -> Gregorian Date)
     let hijriToGregMap = new Map();
     let countdownTimer = null;
 
-    /**********************
-     * 2) التحقق من دعم أم القرى + إظهار الحالة
-     **********************/
-    function checkUmmAlQuraSupport() {
-      try {
-        const fmt = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {
-          year: "numeric", month: "numeric", day: "numeric"
-        });
-        const ro = fmt.resolvedOptions();
-        const cal = (ro.calendar || "").toLowerCase();
-        return { ok: cal.includes("umalqura"), calendar: ro.calendar || "", locale: ro.locale || "" };
-      } catch (e) {
-        return { ok: false, calendar: "", locale: "", error: String(e) };
-      }
-    }
-
-    function renderSupportBar(){
-      const bar = document.getElementById("supportBar");
-      const title = document.getElementById("supportTitle");
-      const details = document.getElementById("supportDetails");
-      const badge = document.getElementById("supportBadge");
-
-      const info = checkUmmAlQuraSupport();
-
-      if (info.ok){
-        bar.classList.add("support-ok");
-        bar.classList.remove("support-bad");
-        title.textContent = "✅ المتصفح يدعم تقويم أم القرى";
-        details.textContent = `Intl calendar: ${info.calendar || "islamic-umalqura"} | locale: ${info.locale || "ar-SA"}`;
-        badge.textContent = "UMM AL-QURA ✔";
-      } else {
-        bar.classList.add("support-bad");
-        bar.classList.remove("support-ok");
-        title.textContent = "❌ المتصفح لا يدعم تقويم أم القرى بشكل كامل";
-        details.textContent = "يفضل استخدام Chrome/Edge حديث. بدون الدعم قد لا تعمل العدادات بدقة.";
-        badge.textContent = "NO SUPPORT ✖";
-      }
-    }
-
-    /**********************
-     * أدوات هجرية
-     **********************/
     function compareHijri(a, b) {
+      if (a.year !== b.year) return a.year - b.year;
+      if (a.month !== b.month) return a.month - b.year;
+      return a.day - b.day;
+    }
+    // ✅ تصحيح خطأ بسيط في المقارنة (السطر أعلاه كان خطأ في الشهر)
+    function compareHijriFixed(a,b){
       if (a.year !== b.year) return a.year - b.year;
       if (a.month !== b.month) return a.month - b.month;
       return a.day - b.day;
     }
+    // نستخدم الثابت الصحيح
+    compareHijri = compareHijriFixed;
+
     function inRange(d) {
       return compareHijri(d, RANGE_START) >= 0 && compareHijri(d, RANGE_END) <= 0;
     }
@@ -443,17 +381,12 @@
       }
       return { year: y, month: m, day: d };
     }
-    function makeKey(year, month, day) {
-      return `${year}-${month}-${day}`;
-    }
+    function makeKey(year, month, day) { return `${year}-${month}-${day}`; }
     function parseKey(key){
       const [y,m,d] = key.split("-").map(Number);
       return {year:y, month:m, day:d};
     }
 
-    /**********************
-     * 3) الحصول على "اليوم الحالي" حسب أم القرى
-     **********************/
     function getTodayHijri() {
       const today = new Date();
       const fmt = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {
@@ -467,19 +400,10 @@
       };
     }
 
-    /**********************
-     * تحويل أم القرى -> ميلادي عبر Intl
-     **********************/
     function buildHijriToGregorianMap(){
       hijriToGregMap = new Map();
-
-      const start = new Date();
-      start.setDate(start.getDate() - 500);
-      start.setHours(12,0,0,0);
-
-      const end = new Date();
-      end.setDate(end.getDate() + 900);
-      end.setHours(12,0,0,0);
+      const start = new Date(); start.setDate(start.getDate() - 500); start.setHours(12,0,0,0);
+      const end = new Date(); end.setDate(end.getDate() + 900); end.setHours(12,0,0,0);
 
       const fmt = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {
         day:"numeric", month:"numeric", year:"numeric"
@@ -499,9 +423,6 @@
       }
     }
 
-    /**********************
-     * مدير
-     **********************/
     function getAdminPassword() {
       return localStorage.getItem(ADMIN_PASSWORD_KEY) || ADMIN_DEFAULT_PASSWORD;
     }
@@ -550,9 +471,6 @@
       }
     }
 
-    /**********************
-     * تخزين
-     **********************/
     function loadEvents() {
       try {
         const raw = localStorage.getItem(EVENTS_STORAGE_KEY);
@@ -565,14 +483,10 @@
       localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
     }
 
-    /**********************
-     * التقويم
-     **********************/
     function renderCalendar() {
       const container = document.getElementById("calendarContainer");
       container.innerHTML = "";
 
-      // اليوم الحالي (هجري أم القرى)
       let todayHijri = null;
       try { todayHijri = getTodayHijri(); } catch { todayHijri = null; }
 
@@ -591,13 +505,9 @@
         rangeSpan.className = "month-range";
 
         let firstVisibleDay = 1;
-        if (compareHijri({year:m.year,month:m.month,day:1}, RANGE_START) < 0) {
-          firstVisibleDay = RANGE_START.day;
-        }
+        if (compareHijri({year:m.year,month:m.month,day:1}, RANGE_START) < 0) firstVisibleDay = RANGE_START.day;
         let lastVisibleDay = m.days;
-        if (compareHijri({year:m.year,month:m.month,day:m.days}, RANGE_END) > 0) {
-          lastVisibleDay = RANGE_END.day;
-        }
+        if (compareHijri({year:m.year,month:m.month,day:m.days}, RANGE_END) > 0) lastVisibleDay = RANGE_END.day;
         rangeSpan.textContent = `من ${firstVisibleDay} إلى ${lastVisibleDay} ${m.name}`;
 
         header.appendChild(nameSpan);
@@ -673,12 +583,12 @@
             if (!insideRange) cell.classList.add("out-of-range");
             else if (isPrevNext) cell.classList.add("prev-next");
 
-            // ✅ تمييز اليوم الحالي
             if (insideRange && todayHijri &&
                 dayObj.year === todayHijri.year &&
                 dayObj.month === todayHijri.month &&
                 dayObj.day === todayHijri.day) {
               cell.classList.add("today");
+              cell.id = "todayCell"; // ⭐ للزر
             }
 
             const dn = document.createElement("div");
@@ -701,43 +611,27 @@
               const pill = document.createElement("div");
               pill.className = "event-pill";
               pill.style.background = ev.color || "#2563eb";
-
               if (ev.pos) pill.classList.add("range-" + ev.pos);
               else pill.classList.add("range-single");
 
               const txt = document.createElement("span");
               txt.className = "event-text";
               txt.textContent = ev.text || "";
-
-              txt.onclick = (e) => {
-                e.stopPropagation();
-                viewEvent(parseKey(key), ev);
-              };
-
+              txt.onclick = (e) => { e.stopPropagation(); viewEvent(parseKey(key), ev); };
               pill.appendChild(txt);
 
               const del = document.createElement("span");
               del.className = "event-delete";
               del.textContent = "×";
-              if (isAdmin) {
-                del.onclick = (e) => {
-                  e.stopPropagation();
-                  deleteEvent(key, ev.id);
-                };
-              } else {
-                del.classList.add("disabled");
-              }
+              if (isAdmin) del.onclick = (e) => { e.stopPropagation(); deleteEvent(key, ev.id); };
+              else del.classList.add("disabled");
               pill.appendChild(del);
 
               evList.appendChild(pill);
             });
 
             cell.appendChild(evList);
-
-            if (insideRange) {
-              cell.onclick = () => handleDayClick(dayObj);
-            }
-
+            if (insideRange) cell.onclick = () => handleDayClick(dayObj);
             row.appendChild(cell);
           }
 
@@ -751,19 +645,24 @@
       });
     }
 
-    /**********************
-     * إضافة/حذف/عرض
-     **********************/
-    let dialogDate = null;
+    // ✅ زر الانتقال لليوم
+    function scrollToToday(){
+      const el = document.getElementById("todayCell");
+      if (!el) {
+        alert("اليوم الحالي غير موجود ضمن نطاق التقويم المعروض.");
+        return;
+      }
+      el.scrollIntoView({ behavior:"smooth", block:"center" });
+    }
 
+    let dialogDate = null;
     function handleDayClick(dayObj) {
       if (!isAdmin) return alert("إضافة الأحداث مخصصة لمدير الموقع فقط.");
       dialogDate = dayObj;
       openEventDialog(dayObj);
     }
     function openEventDialog(dayObj) {
-      document.getElementById("dialogDateLabel").textContent =
-        `التاريخ: ${dayObj.day} / ${dayObj.month} / ${dayObj.year} هـ`;
+      document.getElementById("dialogDateLabel").textContent = `التاريخ: ${dayObj.day} / ${dayObj.month} / ${dayObj.year} هـ`;
       document.getElementById("eventTitleInput").value = "";
       document.getElementById("eventColorSelect").value = "#e53935";
       document.getElementById("eventRepeatDays").value = "0";
@@ -781,7 +680,6 @@
       const color = document.getElementById("eventColorSelect").value;
       let repeatDays = parseInt(document.getElementById("eventRepeatDays").value || "0", 10);
       if (isNaN(repeatDays) || repeatDays < 0) repeatDays = 0;
-
       if (!title) return alert("رجاءً أدخل عنوان الحدث.");
 
       const groupId = "grp_" + Date.now().toString(36) + Math.random().toString(16).slice(2);
@@ -790,7 +688,6 @@
       for (let i = 0; i < totalDays; i++) {
         const d = addHijriDays(dialogDate, i);
         if (!d || !inRange(d)) continue;
-
         const key = makeKey(d.year, d.month, d.day);
         if (!events[key]) events[key] = [];
 
@@ -800,13 +697,7 @@
         else if (i === totalDays - 1) pos = "end";
         else pos = "mid";
 
-        events[key].push({
-          id: groupId + "_" + i,
-          groupId,
-          text: title,
-          color,
-          pos
-        });
+        events[key].push({ id: groupId + "_" + i, groupId, text: title, color, pos });
       }
 
       saveEvents();
@@ -829,16 +720,30 @@
         }
       } else {
         events[key] = events[key].filter(ev => ev.id !== id);
-        if (events[key].length === 0) delete events[key];
+        if (events[key].length === 0) delete events[k];
       }
 
       saveEvents();
       renderAll();
     }
 
+    function deleteEventGroup(groupId){
+      if (!isAdmin) return alert("حذف الأحداث متاح للمدير فقط.");
+      if (!groupId) return;
+
+      if (!confirm("تأكيد: هل تريد حذف هذا الحدث بالكامل من كل الأيام؟")) return;
+
+      for (const k in events) {
+        if (!Object.prototype.hasOwnProperty.call(events, k)) continue;
+        events[k] = (events[k] || []).filter(ev => ev.groupId !== groupId && ev.id !== groupId);
+        if (events[k].length === 0) delete events[k];
+      }
+      saveEvents();
+      renderAll();
+    }
+
     function viewEvent(dayObj, ev) {
-      document.getElementById("viewDateLabel").textContent =
-        `التاريخ: ${dayObj.day} / ${dayObj.month} / ${dayObj.year} هـ`;
+      document.getElementById("viewDateLabel").textContent = `التاريخ: ${dayObj.day} / ${dayObj.month} / ${dayObj.year} هـ`;
       document.getElementById("viewText").textContent = ev.text || "";
       document.getElementById("eventViewDialog").classList.remove("dialog-hidden");
     }
@@ -846,9 +751,6 @@
       document.getElementById("eventViewDialog").classList.add("dialog-hidden");
     }
 
-    /**********************
-     * الفلتر
-     **********************/
     function applyFilter() {
       currentFilter = document.getElementById("filterInput").value.trim();
       renderAll();
@@ -859,9 +761,6 @@
       renderAll();
     }
 
-    /**********************
-     * طباعة و PDF
-     **********************/
     function printCalendar(){ window.print(); }
     function exportPDF() {
       const element = document.querySelector(".page");
@@ -875,9 +774,6 @@
       html2pdf().from(element).set(opt).save();
     }
 
-    /**********************
-     * نسخ احتياطي
-     **********************/
     function downloadBackup() {
       const dataStr = JSON.stringify(events, null, 2);
       const blob = new Blob([dataStr], { type: "application/json" });
@@ -910,9 +806,6 @@
       reader.readAsText(file, "utf-8");
     });
 
-    /**********************
-     * قائمة الأحداث + العدّاد
-     **********************/
     function normalizeEvents(){
       const byGroup = new Map();
 
@@ -922,12 +815,7 @@
         for (const ev of list){
           const gid = ev.groupId || ev.id;
           if (!byGroup.has(gid)){
-            byGroup.set(gid, {
-              groupId: ev.groupId || null,
-              title: ev.text || "",
-              color: ev.color || "#2563eb",
-              keys: new Set(),
-            });
+            byGroup.set(gid, { groupId: ev.groupId || null, title: ev.text || "", color: ev.color || "#2563eb", keys: new Set() });
           }
           byGroup.get(gid).keys.add(key);
         }
@@ -953,16 +841,9 @@
       return arr;
     }
 
-    function hijriKeyToGregDate(key){
-      return hijriToGregMap.get(key) || null;
-    }
-
-    function startOfDay(date){
-      return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0,0,0,0);
-    }
-    function endOfDay(date){
-      return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23,59,59,999);
-    }
+    function hijriKeyToGregDate(key){ return hijriToGregMap.get(key) || null; }
+    function startOfDay(date){ return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0,0,0,0); }
+    function endOfDay(date){ return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23,59,59,999); }
 
     function formatDuration(ms){
       if (ms < 0) ms = 0;
@@ -974,9 +855,37 @@
       const dd = days ? `${days} يوم ` : "";
       return `${dd}${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
     }
+    function hijriLabel(d){ return `${d.day}/${d.month}/${d.year}هـ`; }
 
-    function hijriLabel(d){
-      return `${d.day}/${d.month}/${d.year}هـ`;
+    function getEventStatus(ev){
+      const gStart = hijriKeyToGregDate(ev.startKey);
+      const gEnd = hijriKeyToGregDate(ev.endKey);
+      if (!gStart || !gEnd) return "unknown";
+      const now = new Date();
+      const start = startOfDay(gStart);
+      const end = endOfDay(gEnd);
+      if (now < start) return "upcoming";
+      if (now >= start && now <= end) return "ongoing";
+      return "ended";
+    }
+
+    function sortEvents(list){
+      const mode = document.getElementById("sortSelect").value;
+      if (mode === "date") return list;
+
+      const bucket = { ongoing: 0, upcoming: 1, ended: 2, unknown: 3 };
+      if (mode === "upcoming") { bucket.upcoming=0; bucket.ongoing=1; bucket.ended=2; }
+      if (mode === "ongoing")  { bucket.ongoing=0; bucket.upcoming=1; bucket.ended=2; }
+      if (mode === "ended")    { bucket.ended=0; bucket.ongoing=1; bucket.upcoming=2; }
+
+      return [...list].sort((a,b)=>{
+        const sa = getEventStatus(a);
+        const sb = getEventStatus(b);
+        const ba = bucket[sa] ?? 9;
+        const bb = bucket[sb] ?? 9;
+        if (ba !== bb) return ba - bb;
+        return compareHijri(a.startHijri, b.startHijri);
+      });
     }
 
     function renderSidebar(){
@@ -984,20 +893,22 @@
       const count = document.getElementById("sidebarCount");
       box.innerHTML = "";
 
-      const list = normalizeEvents();
-      const filtered = currentFilter
-        ? list.filter(x => (x.title||"").toLowerCase().includes(currentFilter.toLowerCase()))
-        : list;
+      let list = normalizeEvents();
+      if (currentFilter){
+        const f = currentFilter.toLowerCase();
+        list = list.filter(x => (x.title||"").toLowerCase().includes(f));
+      }
+      list = sortEvents(list);
 
-      count.textContent = `${filtered.length} حدث`;
+      count.textContent = `${list.length} حدث`;
 
-      if (filtered.length === 0){
+      if (list.length === 0){
         box.innerHTML = `<div style="color:#6b7280;font-size:13px;">لا توجد أحداث مطابقة.</div>`;
         stopCountdownLoop();
         return;
       }
 
-      for (const ev of filtered){
+      for (const ev of list){
         const item = document.createElement("div");
         item.className = "event-item";
 
@@ -1005,9 +916,7 @@
         top.className = "event-item-top";
 
         const left = document.createElement("div");
-        left.style.display = "flex";
-        left.style.gap = "8px";
-        left.style.flex = "1";
+        left.className = "event-left";
 
         const dot = document.createElement("div");
         dot.className = "event-dot";
@@ -1021,9 +930,7 @@
         const dates = document.createElement("div");
         dates.className = "event-item-dates";
         const sameDay = compareHijri(ev.startHijri, ev.endHijri) === 0;
-        dates.textContent = sameDay
-          ? `📅 ${hijriLabel(ev.startHijri)}`
-          : `📅 ${hijriLabel(ev.startHijri)} → ${hijriLabel(ev.endHijri)}`;
+        dates.textContent = sameDay ? `📅 ${hijriLabel(ev.startHijri)}` : `📅 ${hijriLabel(ev.startHijri)} → ${hijriLabel(ev.endHijri)}`;
 
         text.appendChild(title);
         text.appendChild(dates);
@@ -1040,9 +947,19 @@
         timer.textContent = "جارٍ الحساب...";
         item.appendChild(timer);
 
+        const actions = document.createElement("div");
+        actions.className = "event-actions";
+        if (isAdmin) {
+          const delBtn = document.createElement("button");
+          delBtn.className = "danger small";
+          delBtn.textContent = "🗑 حذف الحدث بالكامل";
+          delBtn.onclick = (e) => { e.stopPropagation(); deleteEventGroup(ev.groupId || ev.id); };
+          actions.appendChild(delBtn);
+        }
+        if (actions.children.length) item.appendChild(actions);
+
         item.onclick = () => {
-          document.getElementById("viewDateLabel").textContent =
-            `من ${hijriLabel(ev.startHijri)} إلى ${hijriLabel(ev.endHijri)}`;
+          document.getElementById("viewDateLabel").textContent = `من ${hijriLabel(ev.startHijri)} إلى ${hijriLabel(ev.endHijri)}`;
           document.getElementById("viewText").textContent = ev.title || "";
           document.getElementById("eventViewDialog").classList.remove("dialog-hidden");
         };
@@ -1050,7 +967,7 @@
         box.appendChild(item);
       }
 
-      startCountdownLoop(filtered);
+      startCountdownLoop(list);
     }
 
     function stopCountdownLoop(){
@@ -1063,7 +980,6 @@
 
       function tick(){
         const now = new Date();
-
         for (const ev of eventList){
           const timerEl = document.getElementById(`timer_${ev.id}`);
           if (!timerEl) continue;
@@ -1073,7 +989,7 @@
 
           if (!gStart || !gEnd){
             timerEl.className = "event-item-timer timer-ended";
-            timerEl.textContent = "⛔ لا يمكن حساب الوقت (تحقق من دعم أم القرى في المتصفح)";
+            timerEl.textContent = "⛔ لا يمكن حساب الوقت (تقويم أم القرى غير مدعوم في هذا المتصفح)";
             continue;
           }
 
@@ -1097,9 +1013,6 @@
       countdownTimer = setInterval(tick, 1000);
     }
 
-    /**********************
-     * تحديث تلقائي عند منتصف الليل
-     **********************/
     function scheduleMidnightRefresh() {
       const now = new Date();
       const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 1);
@@ -1109,11 +1022,7 @@
       }, nextMidnight - now);
     }
 
-    /**********************
-     * تشغيل
-     **********************/
     function renderAll(){
-      renderSupportBar();
       buildHijriToGregorianMap();
       renderCalendar();
       renderSidebar();
